@@ -232,6 +232,16 @@ def save_recording():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/src/<path:filename>')
+def serve_file(filename):
+    try:
+        return send_file(
+            os.path.join(SRC_FOLDER, filename),
+            mimetype='audio/wav' if filename.endswith('.wav') else None
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 404
+
 @app.route('/', methods=['POST', 'GET'])
 def upload_image():
     if 'image' not in request.files:

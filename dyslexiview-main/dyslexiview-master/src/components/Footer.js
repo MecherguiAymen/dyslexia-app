@@ -1,24 +1,17 @@
 import { useState } from "react";
 import { Container, Row, Col, Tab, Nav } from "react-bootstrap";
-import AudioPlayer from '../AudioPlayer.js';
-import AudioPlayer2 from '../AudioPlayer2.js';
-import AudioRecorder from './AudioRecorder';
-import RecordingsList from './RecordingsList';
 import './Footer.css';
 
 export const Footer = ({ onFileSelected }) => {
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [activeTab, setActiveTab] = useState('upload');
   const [file, setFile] = useState();
-  const [message, setMessage] = useState('');
   const [originalText, setOriginalText] = useState('');
-  const [originalSound, setOriginalSound] = useState('');
-  const [summarizedText, setSummarizedText] = useState('');
-  const [summarizedSound, setSummarizedSound] = useState('');
+  const [audioUrl, setAudioUrl] = useState('');
   const [error, setError] = useState('');
 
   function handleChange(e) {
     const selectedFile = e.target.files[0];
+    if (!selectedFile) return;
+
     const formData = new FormData();
     formData.append('image', selectedFile);
 
@@ -31,16 +24,12 @@ export const Footer = ({ onFileSelected }) => {
       .then(response => response.json())
       .then(data => {
         if (data.success) {
-          setOriginalText(data.original_text); 
-          setOriginalSound(data.original_sound);
-          setSummarizedText(data.summarized_text);
-          setSummarizedSound(data.summary_sound);
+          setOriginalText(data.original_text);
+          setAudioUrl(`http://localhost:5000/${data.original_sound}`);
           setError('');
         } else {
           setOriginalText('');
-          setOriginalSound('');
-          setSummarizedText('');
-          setSummarizedSound('');
+          setAudioUrl('');
           setError('Error: ' + (data.error || 'Unknown error'));
         }
       })
@@ -48,146 +37,75 @@ export const Footer = ({ onFileSelected }) => {
         console.error('Error:', error);
         setError('Error: Network error');
         setOriginalText('');
-        setOriginalSound('');
-        setSummarizedText('');
-        setSummarizedSound('');
+        setAudioUrl('');
       });
   }
 
-  const handleRecordingComplete = (data) => {
-    console.log('Recording completed:', data);
-  };
-
   return (
-    <footer className="footer" id="footer">
+    <div className="footer">
       <Container>
         <Row>
-          <Col lg={12}>
-            <div className="newsletter-bx wow slideInUp">
-              <Tab.Container activeKey={activeTab} onSelect={(k) => setActiveTab(k)}>
-                <Row>
-                  <Col lg={12}>
-                    <Nav variant="pills" className="nav-tabs mb-4">
-                      <Nav.Item>
-                        <Nav.Link eventKey="upload">Upload Image</Nav.Link>
-                      </Nav.Item>
-                      <Nav.Item>
-                        <Nav.Link eventKey="record">Record Audio</Nav.Link>
-                      </Nav.Item>
-                    </Nav>
-                  </Col>
-                </Row>
-
-                <Tab.Content>
-                  <Tab.Pane eventKey="upload">
-                    <Row>
-                      <Col lg={12} md={6} xl={5}>
-                        <h3>Provide your textual input<br />Or upload a file!</h3>
-                      </Col>
-                      <Col md={6} xl={7}>
-                        <form>
-                          <div className="new-email-bx">
-                            <input type="file" onChange={handleChange} className="new-email-bx-button" />
-                          </div>
-                        </form>
-                      </Col>
-                    </Row>
-                    <Row>
-                      <Col>
-                        {file && <h4><b><u>Selected Image:</u></b></h4>}
-                        {file && <img src={file} alt="Selected" style={{ width: '300px' }} />}
-                      </Col>
-                      <Col size={50}>
-                        {originalText && (
-                          <div className="dyslexic-text-section">
-                            <h4><b>Texte extrait</b></h4>
-                            <div className="dyslexic-text-container fade-in">
-                              {originalText.split(' ').map((word, index) => (
-                                <span key={index} className="word-container">
-                                  {word.length > 3 ? (
-                                    <>
-                                      {Array.from({ length: Math.ceil(word.length / 3) }, (_, i) => (
-                                        <span 
-                                          key={i} 
-                                          className={`syllable syllable-${i % 2}`}
-                                        >
-                                          {word.slice(i * 3, (i + 1) * 3)}
-                                        </span>
-                                      ))}
-                                    </>
-                                  ) : (
-                                    <span className="syllable">{word}</span>
-                                  )}
-                                  {' '}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        {summarizedText && (
-                          <div className="dyslexic-text-section">
-                            <h4><b>Texte résumé</b></h4>
-                            <div className="dyslexic-text-container fade-in">
-                              {summarizedText.split(' ').map((word, index) => (
-                                <span key={index} className="word-container">
-                                  {word.length > 3 ? (
-                                    <>
-                                      {Array.from({ length: Math.ceil(word.length / 3) }, (_, i) => (
-                                        <span 
-                                          key={i} 
-                                          className={`syllable syllable-${i % 2}`}
-                                        >
-                                          {word.slice(i * 3, (i + 1) * 3)}
-                                        </span>
-                                      ))}
-                                    </>
-                                  ) : (
-                                    <span className="syllable">{word}</span>
-                                  )}
-                                  {' '}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </Col>
-                      <Row>
-                        <Col>
-                          {summarizedSound && (
-                            <div>
-                              <h4><b><u>Summarized Sound:</u></b></h4>
-                              <AudioPlayer />
-                            </div>
-                          )}
-                        </Col>
-                        <Col>
-                          {originalSound && (
-                            <div>
-                              <h4><b><u>Original Sound:</u></b></h4>
-                              <AudioPlayer2 />
-                            </div>
-                          )}
-                        </Col>
-                      </Row>
-                    </Row>
-                  </Tab.Pane>
-
-                  <Tab.Pane eventKey="record">
-                    <Row>
-                      <Col lg={12}>
-                        <h3>Record and Enhance Audio</h3>
-                        <p>Record your voice and let us enhance it for better clarity!</p>
-                        <AudioRecorder onRecordingComplete={handleRecordingComplete} />
-                        <RecordingsList />
-                      </Col>
-                    </Row>
-                  </Tab.Pane>
-                </Tab.Content>
-              </Tab.Container>
+          <Col>
+            <div className="upload-section">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleChange}
+                className="new-email-bx-button"
+              />
             </div>
+
+            {file && (
+              <div className="image-preview">
+                <h4>Image sélectionnée :</h4>
+                <img src={file} alt="Selected" style={{ maxWidth: '300px' }} />
+              </div>
+            )}
+
+            {originalText && (
+              <div className="dyslexic-text-section">
+                <h4>Texte extrait :</h4>
+                <div className="dyslexic-text-container fade-in">
+                  {originalText.split(' ').map((word, index) => (
+                    <span key={index} className="word-container">
+                      {word.length > 3 ? (
+                        <>
+                          {Array.from({ length: Math.ceil(word.length / 3) }, (_, i) => (
+                            <span 
+                              key={i} 
+                              className={`syllable syllable-${i % 2}`}
+                            >
+                              {word.slice(i * 3, (i + 1) * 3)}
+                            </span>
+                          ))}
+                        </>
+                      ) : (
+                        <span className="syllable">{word}</span>
+                      )}
+                      {' '}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {audioUrl && (
+              <div className="audio-section">
+                <h4>Audio :</h4>
+                <audio controls src={audioUrl}>
+                  Votre navigateur ne supporte pas l'élément audio.
+                </audio>
+              </div>
+            )}
+
+            {error && (
+              <div className="error-message">
+                {error}
+              </div>
+            )}
           </Col>
         </Row>
       </Container>
-    </footer>
-  )
+    </div>
+  );
 }
