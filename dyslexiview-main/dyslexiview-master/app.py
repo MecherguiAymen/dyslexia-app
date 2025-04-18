@@ -8,6 +8,9 @@ import subprocess
 from datetime import datetime
 from pydub import AudioSegment
 from pydub.effects import normalize
+import nltk
+from nltk.tokenize import word_tokenize
+import re
 
 app = Flask(__name__)
 CORS(app)
@@ -27,6 +30,91 @@ for folder in [UPLOAD_FOLDER, TEMP_FOLDER, SRC_FOLDER, RECORDINGS_FOLDER]:
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['TEMP_FOLDER'] = TEMP_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+
+def format_text_for_dyslexia(text):
+    # Nettoyer le texte
+    cleaned_text = text.strip()
+    
+    try:
+        nltk.data.find('tokenizers/punkt')
+    except LookupError:
+        nltk.download('punkt')
+    
+    # Définir les voyelles pour la séparation des syllabes
+    vowels = 'aeiouyàâäéèêëîïôöùûüÿAEIOUYÀÂÄÉÈÊËÎÏÔÖÙÛÜŸ'
+    
+    # Séparer le texte en phrases
+    sentences = nltk.sent_tokenize(cleaned_text)
+    formatted_words = []
+    
+    for sentence in sentences:
+        # Séparer en mots
+        words = word_tokenize(sentence)
+        
+        for word in words:
+            if word.isalnum() and len(word) > 3:
+                # Diviser les mots longs en syllabes
+                syllables = []
+                i = 0
+                current_syllable = ""
+                
+                while i < len(word):
+                    current_syllable += word[i]
+                    
+                    # Règles de séparation des syllabes
+                    if len(current_syllable) >= 2:
+                        # Si on a une voyelle suivie d'une consonne
+                        if (i < len(word) - 1 and 
+                            word[i] in vowels and 
+                            word[i+1] not in vowels):
+                            syllables.append(current_syllable)
+                            current_syllable = ""
+                        # Si on a deux consonnes consécutives
+                        elif (i < len(word) - 1 and 
+                              word[i] not in vowels and 
+                              word[i+1] not in vowels):
+                            syllables.append(current_syllable)
+                            current_syllable = ""
+                    
+                    i += 1
+                
+                if current_syllable:
+                    syllables.append(current_syllable)
+                
+                # Si aucune syllabe n'a été trouvée, utiliser le mot entier
+                if not syllables:
+                    syllables = [word]
+            else:
+                # Garder les mots courts et la ponctuation intacts
+                syllables = [word]
+            
+            formatted_words.append({
+                'word': word,
+                'syllables': syllables,
+                'type': 'word' if word.isalnum() else 'punctuation',
+                'syllable_colors': ['#0066CC', '#003366'] * (len(syllables) // 2 + 1)  # Alternance de bleus pour meilleur contraste
+            })
+    
+    return {
+        'original': text,
+        'words': formatted_words,
+        'formatting': {
+            'font_family': 'OpenDyslexic',
+            'letter_spacing': '0.25em',      # Augmentation de l'espacement des lettres
+            'word_spacing': '0.5em',         # Ajout d'espacement entre les mots
+            'line_height': '2.5',            # Augmentation de l'interligne
+            'background_color': '#FFF8DC',   # Fond beige clair (moins agressif)
+            'text_color': '#000000',         # Texte noir pour un meilleur contraste
+            'text_align': 'left',
+            'paragraph_spacing': '2em',      # Espacement entre les paragraphes
+            'max_line_length': '60ch',       # Limitation de la longueur des lignes
+            'font_size': '18px',            # Taille de police plus grande
+            'font_weight': '500',           # Police légèrement plus grasse
+            'margin': '2em',               # Marges pour éviter la surcharge visuelle
+            'use_rulers': True,            # Utilisation de règles pour suivre les lignes
+            'highlight_hover': True        # Surbrillance au survol pour aide à la lecture
+        }
+    }
 
 def run_tesseract(image_path):
     # Créer un fichier temporaire pour la sortie
@@ -164,6 +252,9 @@ def upload_image():
                 original_text = run_tesseract(filename)
                 if not original_text:
                     original_text = "No text detected in the image"
+                
+                # Formater le texte pour les dyslexiques
+                formatted_text = format_text_for_dyslexia(original_text)
             except Exception as ocr_error:
                 return jsonify({'success': False, 'error': f'OCR failed: {str(ocr_error)}'})
 
@@ -171,13 +262,10 @@ def upload_image():
                 # Import gTTS here to avoid startup issues
                 from gtts import gTTS
                 
-                # Generate audio files
+                # Generate audio file for original text
                 tts = gTTS(original_text, lang='en')
-                audio_filename1 = os.path.join(SRC_FOLDER, '1.wav')
-                audio_filename2 = os.path.join(SRC_FOLDER, '2.wav')
-                
-                tts.save(audio_filename1)
-                tts.save(audio_filename2)
+                audio_filename = os.path.join(SRC_FOLDER, 'original.wav')
+                tts.save(audio_filename)
             except Exception as audio_error:
                 return jsonify({
                     'success': False, 
@@ -188,9 +276,8 @@ def upload_image():
             return jsonify({
                 'success': True,
                 'original_text': original_text,
-                'summarized_text': original_text,  # For now, same as original
-                'summary_sound': 'src/1.wav',
-                'original_sound': 'src/2.wav'
+                'formatted_text': formatted_text,
+                'original_sound': 'src/original.wav'
             })
 
         except Exception as e:

@@ -1,0 +1,108 @@
+@font-face {
+  font-family: 'OpenDyslexic';
+  src: url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic-regular.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'OpenDyslexic';
+  src: url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic-regular.otf') format('opentype');
+}
+
+.dyslexic-text-section {
+  margin: 2rem 0;
+}
+
+.dyslexic-text-section h4 {
+  background-color: #3498db;
+  color: white;
+  padding: 1rem;
+  border-radius: 8px 8px 0 0;
+  margin: 0;
+  text-align: center;
+  font-size: 1.2em;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.dyslexic-text-container {
+  font-family: 'OpenDyslexic', Arial, sans-serif;
+  background-color: #f4e1d2; /* Fond beige plus doux */
+  padding: 2rem;
+  border-radius: 0 0 12px 12px;
+  line-height: 2; /* Augmentation de l'interligne */
+  color: #2c3e50;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0ddd1;
+  border-top: none;
+  word-spacing: 0.35em; /* Plus d'espace entre les mots */
+  text-align: left; /* Alignement à gauche plutôt que justifié */
+  max-width: 700px; /* Limitation de la largeur pour une meilleure lisibilité */
+  margin: 0 auto;
+}
+
+.word-container {
+  display: inline-block;
+  margin: 0 8px; /* Plus d'espace entre les mots */
+  padding: 3px 6px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  cursor: default;
+  position: relative;
+}
+
+.word-container:hover {
+  background-color: #fff;
+  transform: scale(1.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}
+
+.syllable {
+  display: inline-block;
+  padding: 0 3px;
+  font-size: 1.25em; /* Taille de police plus grande */
+  letter-spacing: 0.8px; /* Plus d'espace entre les lettres */
+  transition: all 0.3s ease;
+}
+
+.syllable-0 {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.syllable-1 {
+  color: #34495e;
+  font-weight: normal;
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Amélioration du contraste et de la lisibilité */
+.dyslexic-text-container {
+  background: #f4e1d2; /* Couleur unie pour éviter la distraction */
+}
+
+/* Mise en évidence plus subtile au survol */
+.word-container:hover .syllable {
+  color: #2c3e50;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 3px;
+}
+
+/* Style pour les petits mots */
+.word-container:not(:has(.syllable-0)) .syllable {
+  color: #7f8c8d;
+  font-size: 1.1em;
+}

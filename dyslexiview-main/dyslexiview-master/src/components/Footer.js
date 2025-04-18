@@ -4,6 +4,7 @@ import AudioPlayer from '../AudioPlayer.js';
 import AudioPlayer2 from '../AudioPlayer2.js';
 import AudioRecorder from './AudioRecorder';
 import RecordingsList from './RecordingsList';
+import './Footer.css';
 
 export const Footer = ({ onFileSelected }) => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -97,10 +98,58 @@ export const Footer = ({ onFileSelected }) => {
                         {file && <img src={file} alt="Selected" style={{ width: '300px' }} />}
                       </Col>
                       <Col size={50}>
-                        {originalText && <h4><b><u>Extracted Text:</u></b></h4>}
-                        {originalText && <h5>{originalText}</h5>}
-                        {summarizedText && <h4><b><u>Summarized Text:</u></b></h4>}
-                        {summarizedText && <h5>{summarizedText}</h5>}
+                        {originalText && (
+                          <div className="dyslexic-text-section">
+                            <h4><b>Texte extrait</b></h4>
+                            <div className="dyslexic-text-container fade-in">
+                              {originalText.split(' ').map((word, index) => (
+                                <span key={index} className="word-container">
+                                  {word.length > 3 ? (
+                                    <>
+                                      {Array.from({ length: Math.ceil(word.length / 3) }, (_, i) => (
+                                        <span 
+                                          key={i} 
+                                          className={`syllable syllable-${i % 2}`}
+                                        >
+                                          {word.slice(i * 3, (i + 1) * 3)}
+                                        </span>
+                                      ))}
+                                    </>
+                                  ) : (
+                                    <span className="syllable">{word}</span>
+                                  )}
+                                  {' '}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {summarizedText && (
+                          <div className="dyslexic-text-section">
+                            <h4><b>Texte résumé</b></h4>
+                            <div className="dyslexic-text-container fade-in">
+                              {summarizedText.split(' ').map((word, index) => (
+                                <span key={index} className="word-container">
+                                  {word.length > 3 ? (
+                                    <>
+                                      {Array.from({ length: Math.ceil(word.length / 3) }, (_, i) => (
+                                        <span 
+                                          key={i} 
+                                          className={`syllable syllable-${i % 2}`}
+                                        >
+                                          {word.slice(i * 3, (i + 1) * 3)}
+                                        </span>
+                                      ))}
+                                    </>
+                                  ) : (
+                                    <span className="syllable">{word}</span>
+                                  )}
+                                  {' '}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </Col>
                       <Row>
                         <Col>
